@@ -18,7 +18,7 @@ let package = Package(
         .target(
             name: "OktaOidc",
             dependencies: [],
-            path: "Okta")
+            path: "Okta/OktaOidc")
     ],
     swiftLanguageVersions: [.v5]
 )
