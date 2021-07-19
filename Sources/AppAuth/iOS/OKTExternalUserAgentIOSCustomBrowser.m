@@ -145,7 +145,8 @@ NS_ASSUME_NONNULL_BEGIN
     NSString *testURLString = [NSString stringWithFormat:@"%@://example.com", _canOpenURLScheme];
     NSURL *testURL = [NSURL URLWithString:testURLString];
     if (![[UIApplication sharedApplication] canOpenURL:testURL]) {
-      [[UIApplication sharedApplication] openURL:_appStoreURL];
+      [[UIApplication sharedApplication] openURL:_appStoreURL options:@{} completionHandler:nil];
+      
       return NO;
     }
   }
@@ -153,7 +154,19 @@ NS_ASSUME_NONNULL_BEGIN
   // Transforms the request URL and opens it.
   NSURL *requestURL = [request externalUserAgentRequestURL];
   requestURL = _URLTransformation(requestURL);
-  BOOL openedInBrowser = [[UIApplication sharedApplication] openURL:requestURL];
+    
+  __block BOOL openedInBrowser = NO;
+  
+  dispatch_group_t group = dispatch_group_create();
+  
+  dispatch_group_enter(group);
+  [[UIApplication sharedApplication] openURL:requestURL options:@{} completionHandler:^(BOOL success) {
+      openedInBrowser = success;
+      dispatch_group_leave(group);
+  }];
+  
+  dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+
   return openedInBrowser;
 }
 

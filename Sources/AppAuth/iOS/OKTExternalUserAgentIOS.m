@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 
   _externalUserAgentFlowInProgress = YES;
   _session = session;
-  BOOL openedUserAgent = NO;
+  __block BOOL openedUserAgent = NO;
   NSURL *requestURL = [request externalUserAgentRequestURL];
 
   // iOS 12 and later, use ASWebAuthenticationSession
@@ -165,7 +165,15 @@ NS_ASSUME_NONNULL_BEGIN
   }
   // iOS 8 and earlier, use mobile Safari
   if (!openedUserAgent){
-    openedUserAgent = [[UIApplication sharedApplication] openURL:requestURL];
+    dispatch_group_t group = dispatch_group_create();
+  
+    dispatch_group_enter(group);
+    [[UIApplication sharedApplication] openURL:requestURL options:@{} completionHandler:^(BOOL success) {
+      openedUserAgent = success;
+      dispatch_group_leave(group);
+    }];
+  
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
   }
 
   if (!openedUserAgent) {
